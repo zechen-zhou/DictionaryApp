@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--show ic_home_black_24dp icon when the icon is tapped(selected) by user -->
+    <item android:drawable="@drawable/ic_home_black_24dp" android:state_checked="true" />
+
+    <!--show ic_home_outline_24dp icon when the icon is not tapped(selected) by user -->
+    <item android:drawable="@drawable/ic_home_outline_24dp" android:state_checked="false" />
+</selector>
