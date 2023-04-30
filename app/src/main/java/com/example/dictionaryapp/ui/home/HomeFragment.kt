@@ -22,13 +22,17 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
 
+        // Creates a ViewModel object
+        val homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
+
+        // Inflates the layout for this fragment
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         val textView: TextView = binding.textHome
+
+        // Sets the text of textView with data from homeViewModel
         homeViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
