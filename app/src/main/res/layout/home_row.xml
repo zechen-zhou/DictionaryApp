@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="56dp"
+        android:layout_marginBottom="6dp"
+        android:text="Noun"
+        android:textColor="#007FAC"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!--
+        https://stackoverflow.com/a/8930869
+        https://www.jianshu.com/p/9484d15dc7a8
+    -->
+    <CheckBox
+        android:id="@+id/favCheckBox"
+        style="?android:attr/starStyle"
+        android:layout_width="33dp"
+        android:layout_height="73dp"
+        android:gravity="top"
+        android:theme="@style/CheckBoxTheme"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/indexNumber"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/circle_background"
+        android:gravity="center"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="1" />
+
+    <!--
+    android:maxLines="1": this just forces the text to one line. Any extra text is hidden.
+    android:ellipsize="end": this cuts off the text that doesn't fit but lets users know that
+                            the text has been truncated by adding an ellipsis (the three dots).
+    -->
+    <TextView
+        android:id="@+id/definition"
+        android:layout_width="246dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@+id/type"
+        app:layout_constraintTop_toTopOf="@+id/type"
+        tools:text="a type of product manufactured by good" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

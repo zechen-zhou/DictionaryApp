@@ -35,4 +35,47 @@
         app:queryBackground="@android:color/transparent"
         app:queryHint="@string/hint_searchView"></androidx.appcompat.widget.SearchView>
 
+    <TextView
+        android:id="@+id/word"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:fontFamily="@font/roboto_slab"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/searchView"
+        app:layout_constraintTop_toBottomOf="@+id/searchView"
+        tools:text="hello" />
+
+    <TextView
+        android:id="@+id/definitionLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:fontFamily="@font/roboto_slab"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="@+id/word"
+        app:layout_constraintTop_toBottomOf="@+id/word"
+        tools:text="Definitions of " />
+
+    <TextView
+        android:id="@+id/word2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/roboto_slab"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@+id/definitionLabel"
+        app:layout_constraintTop_toTopOf="@+id/definitionLabel"
+        tools:text="hello" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="260dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/definitionLabel" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
