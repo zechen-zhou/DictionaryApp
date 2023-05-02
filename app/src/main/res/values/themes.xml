@@ -16,6 +16,7 @@
 
     <!--https://www.jianshu.com/p/9484d15dc7a8-->
     <style name="CheckBoxTheme" parent="Theme.AppCompat.Light">
+        <item name="colorControlNormal">@color/light_gray</item><!-- state unchecked color -->
         <item name="colorControlActivated">@color/golden_yellow</item><!-- state checked color -->
     </style>
 </resources>
