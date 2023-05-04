@@ -1,9 +1,12 @@
 package com.example.dictionaryapp.ui.home
 
+import android.content.ContentValues
+import  android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
@@ -13,6 +16,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.dictionaryapp.BuildConfig
 import com.example.dictionaryapp.R
+import com.example.dictionaryapp.data.MyContract
+import com.example.dictionaryapp.data.MyOpenHelper
 import com.example.dictionaryapp.databinding.FragmentHomeBinding
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -57,8 +62,15 @@ class HomeFragment : Fragment() {
         var wordLabel: TextView? = null
         var definitionLabel: TextView? = null
         var recyclerView: RecyclerView? = null
+
+        var db: SQLiteDatabase? = null
+
+        // 1 means the word definition has been saved in the database, 0 means not saved yet
+        const val SAVED = 1
+        const val NOT_SAVED = 0
     }
 
+    // Creates an object of MyAdapter
     val adt = MyAdapter()
 
     override fun onCreateView(
@@ -82,6 +94,10 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val opener = MyOpenHelper(requireContext())
+        db = opener.writableDatabase
+
         // Adds dividers and space between items in RecyclerView (https://stackoverflow.com/a/41201865)
         recyclerView?.addItemDecoration(
             DividerItemDecoration(
@@ -168,6 +184,27 @@ class HomeFragment : Fragment() {
 
                         val example: String = positionI.get("example").toString()
 
+                        // Initializes saveState to -1
+                        var saveState = -1
+
+                        // Checks whether the definition is the database, then set the value for saveState
+                        val query =
+                            "Select * from " + MyContract.Entry.TABLE_NAME + " where " + MyContract.Entry.COLUMN_NAME_DEFINITION + " = \"" + definition + "\";"
+                        val results = db?.rawQuery(query, null)
+
+                        if (results != null) {
+                            // Sets 'saveState' to NOT_SAVED if the definition is not in the database
+                            if (results.count <= 0) {
+                                saveState = NOT_SAVED
+                            } else if (results.count >= 1) {
+                                saveState = SAVED
+                            }
+                        }
+                        results?.close()
+
+                        // Initializes id to 0
+//                        var id: Long = 0
+
                         // Adds the created wordDefinitions object to the ArrayList wordDefinitions
                         wordDefinitions.add(
                             WordDefinition(
@@ -175,7 +212,9 @@ class HomeFragment : Fragment() {
                                 pronunciation,
                                 type,
                                 definition,
-                                example
+                                example,
+                                saveState,
+//                                id
                             )
                         )
                     }
@@ -260,12 +299,65 @@ class HomeFragment : Fragment() {
         val indexNumber: TextView
         val type: TextView
         val definition: TextView
+        var favCheckBox: CheckBox
 
-        // Initialization code can be placed in initializer blocks prefixed with the init keyword
+        // In Kotlin, the init block is used to initialize properties or execute code when an instance of a class is created
         init {
             indexNumber = itemView.findViewById(R.id.indexNumber)
             type = itemView.findViewById(R.id.type)
             definition = itemView.findViewById(R.id.definition)
+            favCheckBox = itemView.findViewById(R.id.favCheckBox)
+
+            favCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                // The word definition position that you clicked on (i.e. the star icon position that you tap on)
+                val position: Int = adapterPosition
+
+                // Creates a new WordDefinition object when you click on the word definition
+                val thisDefinition = wordDefinitions.get(position)
+
+                // Checks whether the word definition is already in the database (prevent adding duplicates)
+                val query =
+                    "Select * from " + MyContract.Entry.TABLE_NAME + " where " + MyContract.Entry.COLUMN_NAME_DEFINITION + " = \"" + thisDefinition.definition + "\";"
+                val results = db?.rawQuery(query, null)
+
+                if (results != null) {
+                    // if favCheckBox is checked and the definition is not saved in the database, then add it to the database
+                    if (results.count <= 0 && isChecked) {
+                        // Sets what goes in the columns, you don't need to set the _ID column because the id increase automatically
+                        val newRow = ContentValues().apply {
+                            put(MyContract.Entry.COLUMN_NAME_WORD, thisDefinition.word)
+                            put(
+                                MyContract.Entry.COLUMN_NAME_PRONUNCIATION,
+                                thisDefinition.pronunciation
+                            )
+                            put(MyContract.Entry.COLUMN_NAME_TYPE, thisDefinition.type)
+                            put(MyContract.Entry.COLUMN_NAME_DEFINITION, thisDefinition.definition)
+                            put(MyContract.Entry.COLUMN_NAME_EXAMPLE, thisDefinition.example)
+                        }
+
+                        // Inserts the new row to database
+                        db?.insert(MyContract.Entry.TABLE_NAME, null, newRow)
+
+                        // Inserts the new row to database, returning the primary key value of the new row, which is the _ID column
+//                        val newRowId = db?.insert(MyContract.Entry.TABLE_NAME, null, newRow)
+
+//                        if (newRowId != null) {
+//                            thisDefinition.id = newRowId
+//                        }
+                    }
+
+                    // If favCheckBox is not checked and the definition is saved in the database, then delete it from the database
+                    else if (results.count >= 1 && !isChecked) {
+                        // Deletes it from the database where the definition is matched
+                        db?.delete(
+                            MyContract.Entry.TABLE_NAME,
+                            "${MyContract.Entry.COLUMN_NAME_DEFINITION}=?",
+                            arrayOf<String>(wordDefinitions.get(position).definition.toString())
+                        )
+                    }
+                }
+                results?.close()
+            }
         }
     }
 
@@ -281,6 +373,13 @@ class HomeFragment : Fragment() {
 
         // Replaces the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(holder: MyRowViews, position: Int) {
+            // Initializes the state of 'favCheckBox' to be checked or unchecked
+            if (wordDefinitions.get(position).saveState == 1) {
+                holder.favCheckBox.isChecked = true
+            } else if (wordDefinitions.get(position).saveState == 0) {
+                holder.favCheckBox.isChecked = false
+            }
+
             // holder.typeText.setText(wordDefinitions.get(position).getType()); in Java
             holder.type.text = wordDefinitions.get(position).type
 
@@ -301,15 +400,44 @@ class HomeFragment : Fragment() {
 
     override fun onDestroy() {
         job.cancel()
+
+        // Closes the database
+        db?.close()
+
         super.onDestroy()
     }
 
     // You can declare properties and initializes them in the primary constructor (either mutable (var) or read-only (val))
+    // Without keyword 'val' or 'var', they are just parameters of the primary constructor instead of properties
     class WordDefinition(
         val word: String,
         val pronunciation: String,
         val type: String,
         val definition: String,
         val example: String,
-    )
+        val saveState: Int, // 1 means the word definition has been saved in the database, 0 means not saved yet
+    ) {
+        // Declares and initializes property id
+//        var id: Long = 0
+
+        // Secondary constructor
+//        constructor(
+//            word: String,
+//            pronunciation: String,
+//            type: String,
+//            definition: String,
+//            example: String,
+//            saveState: Int,
+//            id: Long
+//        ) : this(
+//            word,
+//            pronunciation,
+//            type,
+//            definition,
+//            example,
+//            saveState
+//        ) {
+//            this.id = id
+//        }
+    }
 }
