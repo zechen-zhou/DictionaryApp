@@ -62,6 +62,7 @@ class HomeFragment : Fragment() {
         var wordLabel: TextView? = null
         var definitionLabel: TextView? = null
         var recyclerView: RecyclerView? = null
+        var adt: MyAdapter? = null
 
         var db: SQLiteDatabase? = null
 
@@ -69,9 +70,6 @@ class HomeFragment : Fragment() {
         const val SAVED = 1
         const val NOT_SAVED = 0
     }
-
-    // Creates an object of MyAdapter
-    val adt = MyAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -112,9 +110,12 @@ class HomeFragment : Fragment() {
             definitionLabel?.text = "Definitions of "
         }
 
+        // Creates an object of MyAdapter
+        adt = MyAdapter()
+
         // recyclerView.setAdapter(adt); in Java
         recyclerView?.adapter = adt
-        recyclerView!!.layoutManager = LinearLayoutManager(context)
+        recyclerView?.layoutManager = LinearLayoutManager(context)
 
         // Instantiates the client by creating the HttpClient class instance
         val client = HttpClient() {
@@ -192,6 +193,7 @@ class HomeFragment : Fragment() {
                             "Select * from " + MyContract.Entry.TABLE_NAME + " where " + MyContract.Entry.COLUMN_NAME_DEFINITION + " = \"" + definition + "\";"
                         val results = db?.rawQuery(query, null)
 
+                        // Initializes saveState after querying the word definition
                         if (results != null) {
                             // Sets 'saveState' to NOT_SAVED if the definition is not in the database
                             if (results.count <= 0) {
@@ -227,7 +229,7 @@ class HomeFragment : Fragment() {
                         definitionLabel?.text = "Definitions of "
 
                         // Notifies the adapter object that the data set has changed.
-                        adt.notifyDataSetChanged()
+                        adt!!.notifyDataSetChanged()
                     }
                 }
                 return false
@@ -299,7 +301,7 @@ class HomeFragment : Fragment() {
         val indexNumber: TextView
         val type: TextView
         val definition: TextView
-        var favCheckBox: CheckBox
+        val favCheckBox: CheckBox
 
         // In Kotlin, the init block is used to initialize properties or execute code when an instance of a class is created
         init {
@@ -321,8 +323,11 @@ class HomeFragment : Fragment() {
                 val results = db?.rawQuery(query, null)
 
                 if (results != null) {
-                    // if favCheckBox is checked and the definition is not saved in the database, then add it to the database
-                    if (results.count <= 0 && isChecked) {
+                    // If favCheckBox is checked and the word definition is not saved in the database, then add the word definition to the database
+                    if (isChecked && results.count <= 0) {
+                        // Sets the saveState to be SAVED
+                        wordDefinitions.get(position).saveState = SAVED
+
                         // Sets what goes in the columns, you don't need to set the _ID column because the id increase automatically
                         val newRow = ContentValues().apply {
                             put(MyContract.Entry.COLUMN_NAME_WORD, thisDefinition.word)
@@ -345,10 +350,12 @@ class HomeFragment : Fragment() {
 //                            thisDefinition.id = newRowId
 //                        }
                     }
+                    // If favCheckBox is not checked and the word definition is saved in the database, then delete the word definition from the database
+                    else if (!isChecked && results.count >= 1) {
+                        // Sets the saveState to be NOT_SAVED
+                        wordDefinitions.get(position).saveState = NOT_SAVED
 
-                    // If favCheckBox is not checked and the definition is saved in the database, then delete it from the database
-                    else if (results.count >= 1 && !isChecked) {
-                        // Deletes it from the database where the definition is matched
+                        // Deletes the word definition from the database
                         db?.delete(
                             MyContract.Entry.TABLE_NAME,
                             "${MyContract.Entry.COLUMN_NAME_DEFINITION}=?",
@@ -374,10 +381,30 @@ class HomeFragment : Fragment() {
         // Replaces the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(holder: MyRowViews, position: Int) {
             // Initializes the state of 'favCheckBox' to be checked or unchecked
-            if (wordDefinitions.get(position).saveState == 1) {
-                holder.favCheckBox.isChecked = true
-            } else if (wordDefinitions.get(position).saveState == 0) {
-                holder.favCheckBox.isChecked = false
+
+            // Checks whether the word definition is already in the database (prevent adding duplicates)
+            val query =
+                "Select * from " + MyContract.Entry.TABLE_NAME + " where " + MyContract.Entry.COLUMN_NAME_DEFINITION + " = \"" + wordDefinitions.get(
+                    position
+                ).definition + "\";"
+            val results = db?.rawQuery(query, null)
+
+            /**
+             * Sets the state of 'favCheckBox' and 'saveState' based on the query on database,
+             * because onViewCreated will be called every time while switching between home and
+             * favorites fragments, rotating the screen, etc., which means the adapter will be
+             * initialized again.
+             *
+             * So we have to retrieve the data from the database in case it is updated
+             */
+            if (results != null) {
+                if (results.count >= 1) {
+                    wordDefinitions.get(position).saveState == SAVED
+                    holder.favCheckBox.isChecked = true
+                } else if (results.count <= 0) {
+                    wordDefinitions.get(position).saveState == NOT_SAVED
+                    holder.favCheckBox.isChecked = false
+                }
             }
 
             // holder.typeText.setText(wordDefinitions.get(position).getType()); in Java
@@ -415,29 +442,29 @@ class HomeFragment : Fragment() {
         val type: String,
         val definition: String,
         val example: String,
-        val saveState: Int, // 1 means the word definition has been saved in the database, 0 means not saved yet
+        var saveState: Int, // 1 means the word definition has been saved in the database, 0 means not saved yet
     ) {
         // Declares and initializes property id
-//        var id: Long = 0
+        var id: Long = 0
 
         // Secondary constructor
-//        constructor(
-//            word: String,
-//            pronunciation: String,
-//            type: String,
-//            definition: String,
-//            example: String,
-//            saveState: Int,
-//            id: Long
-//        ) : this(
-//            word,
-//            pronunciation,
-//            type,
-//            definition,
-//            example,
-//            saveState
-//        ) {
-//            this.id = id
-//        }
+        constructor(
+            word: String,
+            pronunciation: String,
+            type: String,
+            definition: String,
+            example: String,
+            saveState: Int,
+            id: Long
+        ) : this(
+            word,
+            pronunciation,
+            type,
+            definition,
+            example,
+            saveState
+        ) {
+            this.id = id
+        }
     }
 }

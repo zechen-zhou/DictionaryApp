@@ -15,12 +15,12 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="46dp"
         android:layout_marginBottom="16dp"
-        android:text="Exclamation"
         android:textColor="#007FAC"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Exclamation" />
 
     <!--
         https://stackoverflow.com/a/8930869
@@ -71,10 +71,10 @@
         app:layout_constraintTop_toTopOf="@+id/type"
         tools:text="a type of product manufactured by good" />
 
-<!--    <TextView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_marginBottom="1dp"-->
-<!--        android:background="#000000"-->
-<!--        app:layout_constraintTop_toBottomOf="@+id/definition" />-->
+    <!--    <TextView-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:layout_marginBottom="1dp"-->
+    <!--        android:background="#000000"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/definition" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>
