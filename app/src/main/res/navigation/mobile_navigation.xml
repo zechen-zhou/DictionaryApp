@@ -24,7 +24,7 @@
     <fragment
         android:id="@+id/detailDefinitionFragment"
         android:name="com.example.dictionaryapp.ui.detailDefinition.DetailDefinitionFragment"
-        android:label="fragment_detail_definition"
+        android:label="Details"
         tools:layout="@layout/fragment_detail_definition" />
 
 </navigation>
