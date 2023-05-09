@@ -9,6 +9,7 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,6 +19,7 @@ import com.example.dictionaryapp.data.MyOpenHelper
 import com.example.dictionaryapp.databinding.FragmentFavoritesBinding
 import com.example.dictionaryapp.ui.home.HomeFragment
 import com.google.android.material.snackbar.Snackbar
+import java.io.Serializable
 
 class FavoritesFragment : Fragment() {
 
@@ -140,6 +142,37 @@ class FavoritesFragment : Fragment() {
             type = itemView.findViewById(R.id.type)
             defintion = itemView.findViewById(R.id.definition)
             favCheckBox = itemView.findViewById(R.id.favCheckBox)
+
+            // Defines click listener for the MyRowViews' itemView (i.e the listener is for when you click an item on the RecyclerView)
+            itemView.setOnClickListener { _ ->
+                val position = adapterPosition
+                val thisDefinition = wordDefinitions[position]
+                val bundle = Bundle()
+                val myMap = mutableMapOf<String, String>()
+
+                bundle.putString("word", thisDefinition.word)
+
+                // Only "pronunciation" and "example" could have null value
+                if (thisDefinition.pronunciation != "null") {
+                    bundle.putString("pronunciation", thisDefinition.pronunciation)
+                }
+
+                myMap["type"] = thisDefinition.type
+                myMap["definition"] = thisDefinition.definition
+
+                if (thisDefinition.example != "null") {
+                    myMap["example"] = thisDefinition.example
+                }
+
+                val keyList = ArrayList<String>(myMap.keys)
+
+                bundle.putStringArrayList("keyList", keyList)
+                bundle.apply { putSerializable("myMap", myMap as Serializable) }
+
+                // Passes the word definition and navigates to "detailDefinitionFragment"
+                Navigation.findNavController(itemView)
+                    .navigate(R.id.action_navigation_favorites_to_detailDefinitionFragment, bundle)
+            }
 
             favCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 // The word definition position that you clicked on (i.e. the star icon position that you tap on)

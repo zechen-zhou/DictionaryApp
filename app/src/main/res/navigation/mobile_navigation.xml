@@ -20,7 +20,12 @@
         android:id="@+id/navigation_favorites"
         android:name="com.example.dictionaryapp.ui.favorites.FavoritesFragment"
         android:label="@string/title_favorites"
-        tools:layout="@layout/fragment_favorites" />
+        tools:layout="@layout/fragment_favorites">
+        <action
+            android:id="@+id/action_navigation_favorites_to_detailDefinitionFragment"
+            app:destination="@id/detailDefinitionFragment"
+            app:popUpTo="@id/navigation_favorites" />
+    </fragment>
     <fragment
         android:id="@+id/detailDefinitionFragment"
         android:name="com.example.dictionaryapp.ui.detailDefinition.DetailDefinitionFragment"
