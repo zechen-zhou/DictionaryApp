@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -31,6 +32,8 @@ class FavoritesFragment : Fragment() {
         val wordDefinitions = ArrayList<HomeFragment.WordDefinition>()
         var db: SQLiteDatabase? = null
         var recyclerView: RecyclerView? = null
+        var hintView: TextView? = null
+        var starView: ImageView? = null
         var adt: MyFavoritesAdapter? = null
     }
 
@@ -41,6 +44,8 @@ class FavoritesFragment : Fragment() {
         val root: View = binding.root
 
         recyclerView = binding.recyclerView
+        hintView = binding.hintView
+        starView = binding.starView
 
         return root
     }
@@ -181,6 +186,15 @@ class FavoritesFragment : Fragment() {
                             )
                         })
                         .show()
+                }
+
+                // Shows hint view if no word definitions are saved
+                if(wordDefinitions.size == 0){
+                    hintView!!.visibility = View.VISIBLE
+                    starView!!.visibility = View.VISIBLE
+                } else{
+                    hintView!!.visibility = View.INVISIBLE
+                    starView!!.visibility = View.INVISIBLE
                 }
             }
         }
