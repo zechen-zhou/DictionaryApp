@@ -1,7 +1,7 @@
 package com.example.dictionaryapp.ui.home
 
 import android.content.ContentValues
-import  android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -37,6 +38,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import java.io.Serializable
 import java.net.URLEncoder
 
 class HomeFragment : Fragment() {
@@ -294,6 +296,9 @@ class HomeFragment : Fragment() {
     /**
      * Provide a reference to the type of views that you are using.
      *
+     * (create a class to represent a row. This is called the "ViewHolder", a class that
+     * inherits from RecyclerView.ViewHolder)
+     *
      * In the MyRowViews constructor, you are passed the View parameter, which is home_row.xml in
      * this case.
      */
@@ -309,6 +314,37 @@ class HomeFragment : Fragment() {
             type = itemView.findViewById(R.id.type)
             definition = itemView.findViewById(R.id.definition)
             favCheckBox = itemView.findViewById(R.id.favCheckBox)
+
+            // Defines click listener for the MyRowViews' itemView (i.e the listener is for when you click an item on the RecyclerView)
+            itemView.setOnClickListener { _ ->
+                val position = adapterPosition
+                val thisDefinition = wordDefinitions[position]
+                val bundle = Bundle()
+                val myMap = mutableMapOf<String, String>()
+
+                bundle.putString("word", thisDefinition.word)
+
+                // Only "pronunciation" and "example" could have null value
+                if (thisDefinition.pronunciation != "null") {
+                    bundle.putString("pronunciation", thisDefinition.pronunciation)
+                }
+
+                myMap["type"] = thisDefinition.type
+                myMap["definition"] = thisDefinition.definition
+
+                if (thisDefinition.example != "null") {
+                    myMap["example"] = thisDefinition.example
+                }
+
+                val keyList = ArrayList<String>(myMap.keys)
+
+                bundle.putStringArrayList("keyList", keyList)
+                bundle.apply { putSerializable("myMap", myMap as Serializable) }
+
+                // Passes the word definition and navigates to "detailDefinitionFragment"
+                Navigation.findNavController(itemView)
+                    .navigate(R.id.action_navigation_home_to_detailDefinitionFragment, bundle)
+            }
 
             favCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 // The word definition position that you clicked on (i.e. the star icon position that you tap on)
@@ -369,7 +405,8 @@ class HomeFragment : Fragment() {
     }
 
     class MyAdapter : RecyclerView.Adapter<MyRowViews>() {
-        // Creates new views (invoked by the layout manager)
+        // Creates new views (invoked by the layout manager), i.e. creating a layout for a row
+        // The parent parameter is the "RecyclerView"
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyRowViews {
             // Create a new view, which defines the UI of the list item
             val initRow = LayoutInflater.from(parent.context)
