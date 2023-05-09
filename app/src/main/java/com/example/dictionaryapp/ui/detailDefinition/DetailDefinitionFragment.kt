@@ -67,7 +67,17 @@ class DetailDefinitionFragment : Fragment() {
             word.text = bundle.getString("word")
 
             if (bundle.getString("pronunciation") != null) {
-                pronunciation.text = bundle.getString("pronunciation")
+                // Retrieves text from bundle using key value
+                var pronunciationText = bundle.getString("pronunciation")
+
+                // Trims the beginning and ending double quotes
+                pronunciationText = pronunciationText!!.substring(1, pronunciationText.length - 1)
+
+                // Adds brackets
+                pronunciationText = "[ $pronunciationText ]"
+
+                // Sets TextView
+                pronunciation.text = pronunciationText
             } else {
                 pronunciation.visibility = View.INVISIBLE
             }
