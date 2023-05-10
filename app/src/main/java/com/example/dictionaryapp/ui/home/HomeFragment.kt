@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
@@ -58,6 +59,8 @@ class HomeFragment : Fragment() {
         throwable.printStackTrace()
     }
 
+    private lateinit var progressBar: ProgressBar
+
     companion object {
         val wordDefinitions = ArrayList<WordDefinition>()
         var searchView: SearchView? = null
@@ -88,6 +91,7 @@ class HomeFragment : Fragment() {
         wordLabel = binding.wordLabel
         definitionLabel = binding.definitionLabel
         recyclerView = binding.recyclerView
+        progressBar = binding.progressBar
 
         return root
     }
@@ -138,6 +142,13 @@ class HomeFragment : Fragment() {
         searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
 
+                // Makes progress bar to be visible when we retrieving data
+                progressBar.visibility = View.VISIBLE
+
+                // Makes it invisible when search a new word
+                wordLabel?.visibility = View.INVISIBLE
+                definitionLabel?.visibility = View.INVISIBLE
+
                 // Adds a coroutine exception handler in launch code (able to log errors to Logcat)
                 uiScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
                     // asyncOperation
@@ -155,83 +166,123 @@ class HomeFragment : Fragment() {
                         )
                     )
 
-                    // https://stackoverflow.com/a/74233169
-                    // Receives a raw body from server as String
-                    val stringBody: String = response.body()
+                    lateinit var word: String
+                    lateinit var defLabel: String
+                    lateinit var stringBody: String
 
-                    // Parses string to a JSON object
-                    val theDocument: Map<String, JsonElement> =
-                        Json.parseToJsonElement(stringBody).jsonObject
+                    if (response.status.value == 200) {
 
-                    // "pronunciation"
-                    val pronunciation: String = theDocument.get("pronunciation").toString()
+                        // https://stackoverflow.com/a/74233169
+                        // Receives a raw body from server as String
+                        stringBody = response.body()
 
-                    // "word"
-                    var word: String = theDocument.get("word").toString()
-                    // Trims the beginning and ending double quotes
-                    word = word.substring(1, word.length - 1)
+                        // When the word definition is found, i.e stringBody does not contain "Error 404 (Not found)"
+                        if (!stringBody.contains("Error 404 (Not found)", ignoreCase = true)) {
 
-                    // "definitions"
-                    val definitionArray = theDocument.get("definitions")?.jsonArray
+                            // Parses string to a JSON object
+                            val theDocument: Map<String, JsonElement> =
+                                Json.parseToJsonElement(stringBody).jsonObject
 
-                    for (i in definitionArray!!.indices) {
-                        // JSON object at position i
-                        val positionI = definitionArray[i].jsonObject
+                            // "pronunciation"
+                            val pronunciation: String = theDocument.get("pronunciation").toString()
 
-                        var type: String = positionI.get("type").toString()
-                        // Trims the beginning and ending double quotes, capitalizes the first letter
-                        type = type.substring(1, type.length - 1).capitalize()
+                            // "word"
+                            word = theDocument.get("word").toString()
+                            // Trims the beginning and ending double quotes
+                            word = word.substring(1, word.length - 1)
 
-                        var definition: String = positionI.get("definition").toString()
-                        definition = definition.substring(1, definition.length - 1)
+                            // "definitions"
+                            val definitionArray = theDocument.get("definitions")?.jsonArray
 
-                        val example: String = positionI.get("example").toString()
+                            for (i in definitionArray!!.indices) {
+                                // JSON object at position i
+                                val positionI = definitionArray[i].jsonObject
 
-                        // Initializes saveState to -1
-                        var saveState = -1
+                                var type: String = positionI.get("type").toString()
+                                // Trims the beginning and ending double quotes, capitalizes the first letter
+                                type = type.substring(1, type.length - 1).capitalize()
 
-                        // Checks whether the definition is the database, then set the value for saveState
-                        val query =
-                            "Select * from " + MyContract.Entry.TABLE_NAME + " where " + MyContract.Entry.COLUMN_NAME_DEFINITION + " = \"" + definition + "\";"
-                        val results = db?.rawQuery(query, null)
+                                var definition: String = positionI.get("definition").toString()
+                                definition = definition.substring(1, definition.length - 1)
 
-                        // Initializes saveState after querying the word definition
-                        if (results != null) {
-                            // Sets 'saveState' to NOT_SAVED if the definition is not in the database
-                            if (results.count <= 0) {
-                                saveState = NOT_SAVED
-                            } else if (results.count >= 1) {
-                                saveState = SAVED
-                            }
-                        }
-                        results?.close()
+                                val example: String = positionI.get("example").toString()
 
-                        // Initializes id to 0
+                                // Initializes saveState to -1
+                                var saveState = -1
+
+                                // Checks whether the definition is the database, then set the value for saveState
+                                val query =
+                                    "Select * from " + MyContract.Entry.TABLE_NAME + " where " + MyContract.Entry.COLUMN_NAME_DEFINITION + " = \"" + definition + "\";"
+                                val results = db?.rawQuery(query, null)
+
+                                // Initializes saveState after querying the word definition
+                                if (results != null) {
+                                    // Sets 'saveState' to NOT_SAVED if the definition is not in the database
+                                    if (results.count <= 0) {
+                                        saveState = NOT_SAVED
+                                    } else if (results.count >= 1) {
+                                        saveState = SAVED
+                                    }
+                                }
+                                results?.close()
+
+                                // Initializes id to 0
 //                        var id: Long = 0
 
-                        // Adds the created wordDefinitions object to the ArrayList wordDefinitions
-                        wordDefinitions.add(
-                            WordDefinition(
-                                word,
-                                pronunciation,
-                                type,
-                                definition,
-                                example,
-                                saveState,
+                                // Adds the created wordDefinitions object to the ArrayList wordDefinitions
+                                wordDefinitions.add(
+                                    WordDefinition(
+                                        word,
+                                        pronunciation,
+                                        type,
+                                        definition,
+                                        example,
+                                        saveState,
 //                                id
-                            )
-                        )
+                                    )
+                                )
+                            }
+                        }
                     }
-
                     withContext(Dispatchers.Main) {
                         // ui operation
 
-                        // Displays label "Definitions of ..." when query is changed
-                        wordLabel?.text = word
-                        definitionLabel?.text = "Definitions of "
+                        // If the word definition is found
+                        if (response.status.value == 200 &&
+                            !stringBody.contains("Error 404 (Not found)", ignoreCase = true)
+                        ) {
+                            // Displays label "Definitions of ..." when word definition is found
+                            defLabel = "Definitions of "
 
-                        // Notifies the adapter object that the data set has changed.
-                        adt!!.notifyDataSetChanged()
+                            // Notifies the adapter object that the data set has changed.
+                            adt!!.notifyDataSetChanged()
+                        } else {
+                            // When searching symbols, such as !@#$%^&*..., the status code is 200 but no definition is found
+                            if (response.status.value == 404 ||
+                                (response.status.value == 200 &&
+                                        stringBody.contains(
+                                            "Error 404 (Not found)",
+                                            ignoreCase = true
+                                        ))
+                            ) {
+                                word = "oops!  \"" + query + "\" not found"
+                                defLabel = ""
+                            } else if (response.status.value == 429) {
+                                word = "Request was throttled.\nExpected available in 58 seconds."
+                                defLabel = ""
+                            }
+                        }
+
+                        // Makes it visible
+                        wordLabel?.visibility = View.VISIBLE
+                        definitionLabel?.visibility = View.VISIBLE
+
+                        // Sets TextView
+                        wordLabel?.text = word
+                        definitionLabel?.text = defLabel
+
+                        // Makes progress bar to be invisible when we have retrieved all the data
+                        progressBar.visibility = View.INVISIBLE
                     }
                 }
                 return false
