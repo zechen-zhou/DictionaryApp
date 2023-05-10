@@ -1,7 +1,7 @@
 # DictionaryApp
 Demo video:
 
-https://github.com/zechen-zhou/DictionaryApp/assets/73558621/52d1a8ac-9ed2-416a-b5b7-e7c162fa87f9
+https://github.com/zechen-zhou/DictionaryApp/assets/73558621/6bbd193d-a070-4817-bff7-b154261f0535
 
 ## About this project
 
@@ -20,8 +20,8 @@ will be dimmed and the word definition will be removed from the favorites list.
 
 Here are some sample screenshot:
 
-<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/13d12805-4e46-4a18-a056-e5906a79da03" width="190">
-<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/e905b24b-43b9-4020-9dcb-eb87e3308f15" width="190">
-<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/30473605-3fdd-4cfb-9dfc-a85a00b3c80b" width="190">
-<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/a914ef4a-9e12-4eb0-a7bc-0a72632e7dc8" width="190">
-<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/de4846d2-14e6-4fe6-8270-8c2cd00a6779" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/b2c7914f-0836-453d-9688-b003c086ff38" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/8f988df8-6e7f-45eb-8c7a-6cc35c8e405b" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/747143f3-2022-4858-83a7-46e00f4efe8c" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/37bf2ec2-0784-4657-aa16-94aa3a40b297" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/54482170-b01a-42e5-a23d-83800747670d" width="190">
