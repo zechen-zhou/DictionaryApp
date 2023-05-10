@@ -1,5 +1,7 @@
 # DictionaryApp
-demo video link
+Demo video:
+
+https://github.com/zechen-zhou/DictionaryApp/assets/73558621/52d1a8ac-9ed2-416a-b5b7-e7c162fa87f9
 
 ## About this project
 
@@ -17,3 +19,9 @@ the favorites page. It also able to remove the word definitions from the favorit
 will be dimmed and the word definition will be removed from the favorites list.
 
 Here are some sample screenshot:
+
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/13d12805-4e46-4a18-a056-e5906a79da03" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/e905b24b-43b9-4020-9dcb-eb87e3308f15" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/30473605-3fdd-4cfb-9dfc-a85a00b3c80b" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/a914ef4a-9e12-4eb0-a7bc-0a72632e7dc8" width="190">
+<img src="https://github.com/zechen-zhou/DictionaryApp/assets/73558621/de4846d2-14e6-4fe6-8270-8c2cd00a6779" width="190">
