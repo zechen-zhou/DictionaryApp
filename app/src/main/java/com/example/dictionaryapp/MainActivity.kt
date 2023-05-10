@@ -1,8 +1,10 @@
 package com.example.dictionaryapp
 
 import android.os.Bundle
+import android.view.View
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -33,6 +35,16 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        // https://stackoverflow.com/q/56461156
+        // Hides bottom navigation bar except for HomeFragment and FavoritesFragment
+        navController.addOnDestinationChangedListener { _, nd: NavDestination, _ ->
+            if (nd.id == R.id.navigation_home || nd.id == R.id.navigation_favorites) {
+                navView.visibility = View.VISIBLE
+            } else {
+                navView.visibility = View.INVISIBLE
+            }
+        }
     }
 
     // https://stackoverflow.com/a/65860958
