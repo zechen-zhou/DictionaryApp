@@ -10,9 +10,22 @@
         android:name="com.example.dictionaryapp.ui.home.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home">
+        <!--
+        when navigate from fragment_A to fragment_B, both fragments are move
+        enterAnim: the transition for the fragment_B enter the screen
+        exitAnim: the transition for the fragment_A exit the screen
+
+        similarly, when press back button or up button, navigating from fragment_B back to fragment_A
+        popEnterAnim: the transition for the fragment_A enter the screen
+        popExitAnim: the transition for the fragment_B exit the screen
+        -->
         <action
             android:id="@+id/action_navigation_home_to_detailDefinitionFragment"
             app:destination="@id/detailDefinitionFragment"
+            app:enterAnim="@anim/from_right_to_middle"
+            app:exitAnim="@anim/from_middle_to_left"
+            app:popEnterAnim="@anim/from_left_to_middle"
+            app:popExitAnim="@anim/from_middle_to_right"
             app:popUpTo="@id/navigation_home" />
     </fragment>
 
@@ -24,6 +37,10 @@
         <action
             android:id="@+id/action_navigation_favorites_to_detailDefinitionFragment"
             app:destination="@id/detailDefinitionFragment"
+            app:enterAnim="@anim/from_right_to_middle"
+            app:exitAnim="@anim/from_middle_to_left"
+            app:popEnterAnim="@anim/from_left_to_middle"
+            app:popExitAnim="@anim/from_middle_to_right"
             app:popUpTo="@id/navigation_favorites" />
     </fragment>
     <fragment

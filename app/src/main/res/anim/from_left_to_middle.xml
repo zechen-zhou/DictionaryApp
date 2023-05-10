@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--from_left_to_middle means: move fragment from left side(out of the screen) to the screen
+
+    imagine the left side of the fragment as a reference point
+
+     android:fromXDelta="-100%"
+      android:toXDelta="0%"    means move the left side of the fragment from -100% to 0% on x-Axis -->
+
+    <!-- duration: 300 milliseconds
+     upper left corner is origin, i.e. 0%
+     upper right corner is 100% (x-Axis)
+
+     bottom left corner is 100% (y-Axis )
+
+     -100%(left)  0%(middle)  100%(right)-->
+    <translate
+        android:duration="300"
+        android:fromXDelta="-100%"
+        android:toXDelta="0%" />
+</set>
