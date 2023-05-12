@@ -156,15 +156,20 @@ class HomeFragment : Fragment() {
                     // Clears the last search results
                     wordDefinitions.clear()
 
+                    // Removes space if it contains only one word, such that "hello " become "hello"
+                    var querytext = query
+
+                    if (!hasMultipleWords(querytext!!)) {
+                        val spacePosition = querytext!!.indexOf(" ")
+                        if (spacePosition > 0) {
+                            querytext = querytext.substring(0, spacePosition)
+                        }
+                    }
+
                     // Makes an HTTP get request
-                    // With the above client configuration, the resulting URL will be: https://owlbot.info/api/v4/dictionary/{query}
-                    // {query} is an english word such that animal
-                    val response: HttpResponse = client.get(
-                        //convert all spaces in a string "query" to "+"
-                        URLEncoder.encode(
-                            query, "UTF-8"
-                        )
-                    )
+                    // With the above client configuration, the resulting URL will be: https://owlbot.info/api/v4/dictionary/{querytext}
+                    // {querytext} is an english word such that animal
+                    val response: HttpResponse = client.get(querytext)
 
                     lateinit var word: String
                     lateinit var defLabel: String
@@ -554,5 +559,26 @@ class HomeFragment : Fragment() {
         ) {
             this.id = id
         }
+    }
+
+    /**
+     * Check whether a string contains more than one word. Returns true if it contains more than
+     * one word, otherwise returns false.
+     *
+     * It trims any leading or trailing whitespace using the "trim" function.
+     *
+     * Then, it splits the string into an array of words using "split" function with a regular
+     * expression pattern \s+ which matches one or more whitespace characters.
+     *
+     * Finally, the function checks if the size of the "words" array is greater than 1.  If it is,
+     * then it means there are more than one word in the string, and the function returns true.
+     * Otherwise, it returns false.
+     *
+     * (\s matches a single whitespace character, the plus sign + means one or more times.)
+     *
+     */
+    fun hasMultipleWords(input: String): Boolean {
+        val words = input.trim().split("\\s+".toRegex())
+        return words.size > 1
     }
 }
