@@ -3,12 +3,18 @@ package com.example.dictionaryapp.ui.favorites
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.SearchView
 import android.widget.TextView
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,7 +27,7 @@ import com.example.dictionaryapp.ui.home.HomeFragment
 import com.google.android.material.snackbar.Snackbar
 import java.io.Serializable
 
-class FavoritesFragment : Fragment() {
+class FavoritesFragment : Fragment(), MenuProvider {
 
     private var _binding: FragmentFavoritesBinding? = null
 
@@ -55,6 +61,9 @@ class FavoritesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // https://stackoverflow.com/a/72926344
+        activity?.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
         // Clears wordDefinitions ArrayList<>, because onViewCreated is called when rotate the screen
         // ,which means the word definitions are loaded from the database again
         wordDefinitions.clear()
@@ -65,8 +74,7 @@ class FavoritesFragment : Fragment() {
         // Adds dividers and space between items in RecyclerView (https://stackoverflow.com/a/41201865)
         recyclerView?.addItemDecoration(
             DividerItemDecoration(
-                getContext(),
-                DividerItemDecoration.VERTICAL
+                getContext(), DividerItemDecoration.VERTICAL
             )
         )
 
@@ -100,13 +108,7 @@ class FavoritesFragment : Fragment() {
                 // Adds the created wordDefinitions object to the ArrayList "wordDefinitions"
                 wordDefinitions.add(
                     HomeFragment.WordDefinition(
-                        word,
-                        pronunciation,
-                        type,
-                        definition,
-                        example,
-                        saveState,
-                        id
+                        word, pronunciation, type, definition, example, saveState, id
                     )
                 )
             }
@@ -217,15 +219,14 @@ class FavoritesFragment : Fragment() {
                                     removedDefinition.example
                                 )
                             )
-                        })
-                        .show()
+                        }).show()
                 }
 
                 // Shows hint view if no word definitions are saved
-                if(wordDefinitions.size == 0){
+                if (wordDefinitions.size == 0) {
                     hintView!!.visibility = View.VISIBLE
                     starView!!.visibility = View.VISIBLE
-                } else{
+                } else {
                     hintView!!.visibility = View.INVISIBLE
                     starView!!.visibility = View.INVISIBLE
                 }
@@ -237,8 +238,8 @@ class FavoritesFragment : Fragment() {
         // Creates new views (invoked by the layout manager)
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyFavoritesRowViews {
             // Creates a new view, which defines the UI of the list item
-            val initRow = LayoutInflater.from(parent.context)
-                .inflate(R.layout.favorites_row, parent, false)
+            val initRow =
+                LayoutInflater.from(parent.context).inflate(R.layout.favorites_row, parent, false)
 
             return MyFavoritesRowViews(initRow)
         }
@@ -273,5 +274,43 @@ class FavoritesFragment : Fragment() {
         db?.close()
 
         super.onDestroy()
+    }
+
+    // Implements members for MenuHost Interface
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.options_menu, menu)
+
+        val item: MenuItem = menu.findItem(R.id.app_bar_search)
+
+        // Casts expression "item.actionView" to "SearchView"
+        val searchView: SearchView = item.actionView as SearchView
+
+        // https://stackoverflow.com/a/62925379
+        // Hides appbar when SearchView action appears
+        searchView.maxWidth = Integer.MAX_VALUE
+
+        searchView.queryHint = resources.getString(R.string.title_search)
+    }
+
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+            R.id.app_bar_search -> {
+                (menuItem.actionView as SearchView).setOnQueryTextListener(object :
+                    SearchView.OnQueryTextListener {
+                    override fun onQueryTextSubmit(query: String?): Boolean {
+                        TODO("Not yet implemented")
+                        return false
+                    }
+
+                    override fun onQueryTextChange(newText: String?): Boolean {
+                        TODO("Not yet implemented")
+                        return false
+                    }
+                })
+                true
+            }
+
+            else -> false
+        }
     }
 }
