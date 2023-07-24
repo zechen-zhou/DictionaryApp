@@ -1,14 +1,21 @@
 package com.example.dictionaryapp.ui.favorites
 
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.SearchView
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,7 +28,7 @@ import com.example.dictionaryapp.ui.home.HomeFragment
 import com.google.android.material.snackbar.Snackbar
 import java.io.Serializable
 
-class FavoritesFragment : Fragment() {
+class FavoritesFragment : Fragment(), MenuProvider {
 
     private var _binding: FragmentFavoritesBinding? = null
 
@@ -55,6 +62,9 @@ class FavoritesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // https://stackoverflow.com/a/73350979
+        activity?.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
         // Clears wordDefinitions ArrayList<>, because onViewCreated is called when rotate the screen
         // ,which means the word definitions are loaded from the database again
         wordDefinitions.clear()
@@ -74,49 +84,14 @@ class FavoritesFragment : Fragment() {
         val query = "Select * from " + MyContract.Entry.TABLE_NAME + ";"
         val results = db?.rawQuery(query, null)
 
-        if (results != null) {
-
-            // Initializes each of the column indexes that you want right after the query
-            val idCol = results.getColumnIndex("_id")
-            val wordCol = results.getColumnIndex(MyContract.Entry.COLUMN_NAME_WORD)
-            val pronunciationCol =
-                results.getColumnIndex(MyContract.Entry.COLUMN_NAME_PRONUNCIATION)
-            val typeCol = results.getColumnIndex(MyContract.Entry.COLUMN_NAME_TYPE)
-            val definitionCol = results.getColumnIndex(MyContract.Entry.COLUMN_NAME_DEFINITION)
-            val exampleCol = results.getColumnIndex(MyContract.Entry.COLUMN_NAME_EXAMPLE)
-
-            // Sets saveState to SAVED since these definitions are retrieved from the database
-            val saveState = HomeFragment.SAVED
-
-            while (results.moveToNext()) {
-                // For each row that the cursor(i.e. results) is pointing at, get the values associated with each column
-                val id = results.getLong(idCol)
-                val word = results.getString(wordCol)
-                val pronunciation = results.getString(pronunciationCol)
-                val type = results.getString(typeCol)
-                val definition = results.getString(definitionCol)
-                val example = results.getString(exampleCol)
-
-                // Adds the created wordDefinitions object to the ArrayList "wordDefinitions"
-                wordDefinitions.add(
-                    HomeFragment.WordDefinition(
-                        word,
-                        pronunciation,
-                        type,
-                        definition,
-                        example,
-                        saveState,
-                        id
-                    )
-                )
-            }
-        }
+        // Adds the query results to the ArrayList "wordDefinitions"
+        addWordDefinitions(results, wordDefinitions)
 
         // Calls close() on 'results' to release its resources
         results?.close()
 
-        // Creates an object of MyAdapter
-        adt = MyFavoritesAdapter()
+        // Creates an object of MyFavoritesAdapter
+        adt = MyFavoritesAdapter(wordDefinitions)
 
         /**
          * Sets adapter
@@ -131,22 +106,28 @@ class FavoritesFragment : Fragment() {
         recyclerView?.layoutManager = LinearLayoutManager(context)
     }
 
-    class MyFavoritesRowViews(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class MyFavoritesRowViews(
+        itemView: View,
+        wDefinitions_2: ArrayList<HomeFragment.WordDefinition>,
+        adapter: MyFavoritesAdapter // constructor parameters
+    ) : RecyclerView.ViewHolder(itemView) {
+
+        // Properties
         val word: TextView
         val type: TextView
-        val defintion: TextView
+        val definition: TextView
         val favCheckBox: CheckBox
 
         init {
             word = itemView.findViewById(R.id.word)
             type = itemView.findViewById(R.id.type)
-            defintion = itemView.findViewById(R.id.definition)
+            definition = itemView.findViewById(R.id.definition)
             favCheckBox = itemView.findViewById(R.id.favCheckBox)
 
             // Defines click listener for the MyRowViews' itemView (i.e the listener is for when you click an item on the RecyclerView)
             itemView.setOnClickListener { _ ->
                 val position = adapterPosition
-                val thisDefinition = wordDefinitions[position]
+                val thisDefinition = wDefinitions_2[position]
                 val bundle = Bundle()
                 val myMap = mutableMapOf<String, String>()
 
@@ -181,13 +162,13 @@ class FavoritesFragment : Fragment() {
                 // If favCheckBox is unchecked, delete the word definition that was selected
                 if (!isChecked) {
                     // Stores the word definition before removing it from the ArrayList
-                    val removedDefinition = wordDefinitions.get(position)
+                    val removedDefinition = wDefinitions_2.get(position)
 
                     // Removes the word definition from ArrayList
-                    wordDefinitions.removeAt(position)
+                    wDefinitions_2.removeAt(position)
 
                     // Notifies the adapter object that there's data has been removed
-                    adt!!.notifyItemRemoved(position)
+                    adapter!!.notifyItemRemoved(position)
 
                     // Deletes a word definition from the database where an id equals the word definition that was selected
                     db?.delete(
@@ -200,10 +181,10 @@ class FavoritesFragment : Fragment() {
                     Snackbar.make(word, "Removed", Snackbar.LENGTH_LONG)
                         .setAction("Undo", View.OnClickListener {
                             // Reinserts the word definition back into the ArrayList
-                            wordDefinitions.add(position, removedDefinition)
+                            wDefinitions_2.add(position, removedDefinition)
 
                             // Notifies the adapter object that there's data has been inserted
-                            adt!!.notifyItemInserted(position)
+                            adapter!!.notifyItemInserted(position)
 
                             // Reinserts the word definition into the database
                             db!!.execSQL(
@@ -222,10 +203,10 @@ class FavoritesFragment : Fragment() {
                 }
 
                 // Shows hint view if no word definitions are saved
-                if(wordDefinitions.size == 0){
+                if (wordDefinitions.size == 0) {
                     hintView!!.visibility = View.VISIBLE
                     starView!!.visibility = View.VISIBLE
-                } else{
+                } else {
                     hintView!!.visibility = View.INVISIBLE
                     starView!!.visibility = View.INVISIBLE
                 }
@@ -233,33 +214,34 @@ class FavoritesFragment : Fragment() {
         }
     }
 
-    class MyFavoritesAdapter : RecyclerView.Adapter<MyFavoritesRowViews>() {
+    class MyFavoritesAdapter(private val wDefinitions_1: ArrayList<HomeFragment.WordDefinition>) :
+        RecyclerView.Adapter<MyFavoritesRowViews>() {
         // Creates new views (invoked by the layout manager)
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyFavoritesRowViews {
             // Creates a new view, which defines the UI of the list item
             val initRow = LayoutInflater.from(parent.context)
                 .inflate(R.layout.favorites_row, parent, false)
 
-            return MyFavoritesRowViews(initRow)
+            return MyFavoritesRowViews(initRow, wDefinitions_1, this)
         }
 
         // Replaces the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(holder: MyFavoritesRowViews, position: Int) {
 
             // Initializes the state of 'favCheckBox' to be checked or unchecked
-            if (wordDefinitions.get(position).saveState == HomeFragment.SAVED) {
+            if (wDefinitions_1.get(position).saveState == HomeFragment.SAVED) {
                 holder.favCheckBox.isChecked = true
-            } else if (wordDefinitions.get(position).saveState == HomeFragment.NOT_SAVED) {
+            } else if (wDefinitions_1.get(position).saveState == HomeFragment.NOT_SAVED) {
                 holder.favCheckBox.isChecked = false
             }
 
-            holder.word.text = wordDefinitions.get(position).word
-            holder.type.text = wordDefinitions.get(position).type
-            holder.defintion.text = wordDefinitions.get(position).definition
+            holder.word.text = wDefinitions_1.get(position).word
+            holder.type.text = wDefinitions_1.get(position).type
+            holder.definition.text = wDefinitions_1.get(position).definition
         }
 
         override fun getItemCount(): Int {
-            return wordDefinitions.size
+            return wDefinitions_1.size
         }
     }
 
@@ -273,5 +255,111 @@ class FavoritesFragment : Fragment() {
         db?.close()
 
         super.onDestroy()
+    }
+
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.options_menu, menu)
+
+        // https://stackoverflow.com/q/61010340
+        val searchItem: MenuItem = menu.findItem(R.id.app_bar_search)
+        val searchView: SearchView = searchItem.actionView as SearchView
+
+        searchView.setOnQueryTextListener(object :
+            SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                // An ArrayList to store the filtered word definitions
+                val filteredWordDefinitions = ArrayList<HomeFragment.WordDefinition>()
+
+                // Queries the database
+                val query =
+                    "Select * from " + MyContract.Entry.TABLE_NAME + " where " + MyContract.Entry.COLUMN_NAME_WORD + " like " + "\'%" + newText + "%\'" + ";"
+                val results = db?.rawQuery(query, null)
+
+                // Adds the query results to the ArrayList "filteredWordDefinitions"
+                addWordDefinitions(results, filteredWordDefinitions)
+
+                // Calls close() on 'results' to release its resources
+                results?.close()
+
+                // Creates an object of "MyFavoritesAdapter": "myAdapter"
+                val myAdapter = MyFavoritesAdapter(filteredWordDefinitions)
+
+                // Sets adapter
+                recyclerView?.adapter = myAdapter
+
+                // Sets layoutManager to be a vertical LinearLayoutManager
+                recyclerView?.layoutManager = LinearLayoutManager(context)
+
+                return true
+            }
+
+        })
+    }
+
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+            R.id.app_bar_search -> {
+                view?.let {
+//                    Navigation.findNavController(it)
+//                        .navigate(R.id.action_navigation_favorites_to_searchableFragment)
+                }
+                true
+            }
+
+            else -> false
+        }
+    }
+
+    /**
+     * Adds the query results from the database to a target list.
+     *
+     * @param queryResults the query results from the database
+     * @param targetList the ArrayList that store the query results
+     */
+    private fun addWordDefinitions(
+        queryResults: Cursor?,
+        targetList: ArrayList<HomeFragment.WordDefinition>
+    ) {
+        if (queryResults != null) {
+
+            // Initializes each of the column indexes that you want right after the query
+            val idCol = queryResults.getColumnIndex("_id")
+            val wordCol = queryResults.getColumnIndex(MyContract.Entry.COLUMN_NAME_WORD)
+            val pronunciationCol =
+                queryResults.getColumnIndex(MyContract.Entry.COLUMN_NAME_PRONUNCIATION)
+            val typeCol = queryResults.getColumnIndex(MyContract.Entry.COLUMN_NAME_TYPE)
+            val definitionCol = queryResults.getColumnIndex(MyContract.Entry.COLUMN_NAME_DEFINITION)
+            val exampleCol = queryResults.getColumnIndex(MyContract.Entry.COLUMN_NAME_EXAMPLE)
+
+            // Sets saveState to SAVED since these definitions are retrieved from the database
+            val saveState = HomeFragment.SAVED
+
+            while (queryResults.moveToNext()) {
+                // For each row that the cursor(i.e. results) is pointing at, get the values associated with each column
+                val id = queryResults.getLong(idCol)
+                val word = queryResults.getString(wordCol)
+                val pronunciation = queryResults.getString(pronunciationCol)
+                val type = queryResults.getString(typeCol)
+                val definition = queryResults.getString(definitionCol)
+                val example = queryResults.getString(exampleCol)
+
+                // Adds the created wordDefinitions object to the ArrayList "targetList"
+                targetList.add(
+                    HomeFragment.WordDefinition(
+                        word,
+                        pronunciation,
+                        type,
+                        definition,
+                        example,
+                        saveState,
+                        id
+                    )
+                )
+            }
+        }
     }
 }

@@ -4,4 +4,5 @@
     <string name="title_favorites">Favorites</string>
     <string name="hint_searchView">Search for english word</string>
     <string name="tips_View">Save word definitions for offline viewing by tapping the star icon</string>
+    <string name="title_search">Search</string>
 </resources>

@@ -114,6 +114,7 @@ class DetailDefinitionFragment : Fragment() {
             return MyDetailDefinitionRowViews(initRow)
         }
 
+        // The int "position" parameter tell us which row of detail definition (type of definition) we are creating at the DetailDefinitionFragment
         override fun onBindViewHolder(holder: MyDetailDefinitionRowViews, position: Int) {
             // Trims the beginning and ending double quotes for "example" only
             if (keyList[position] == "example") {
